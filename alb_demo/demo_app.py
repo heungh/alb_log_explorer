@@ -85,8 +85,8 @@ class LogParser:
         ]
         return agents[index % len(agents)]
 
-# 로그 파서 초기화
-log_parser = LogParser('./data/140.248.29.3-logs-fieldfiltered.txt')
+# 로그 파서 초기화 (가상 데이터 사용)
+log_parser = LogParser('./data/demo-logs-final.txt')
 
 @app.route('/')
 def index():

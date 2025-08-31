@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "🚀 ALB Log Explorer 데모 시작"
-echo "📊 실제 로그 데이터 (140.248.29.3) 사용"
+echo "📊 가상 데모 데이터 (demo-ecommerce.example.com) 사용"
 
 # Flask와 CORS 설치
 pip3 install flask flask-cors
