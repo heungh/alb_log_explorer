@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALB Access Log 보안 분석 보고서</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        h1 { color: #d32f2f; text-align: center; border-bottom: 3px solid #d32f2f; padding-bottom: 10px; }
+        h2 { color: #1976d2; border-left: 4px solid #1976d2; padding-left: 15px; margin-top: 30px; }
+        h3 { color: #388e3c; }
+        .alert-critical { background: #ffebee; border-left: 5px solid #f44336; padding: 15px; margin: 20px 0; }
+        .alert-warning { background: #fff3e0; border-left: 5px solid #ff9800; padding: 15px; margin: 20px 0; }
+        .alert-info { background: #e3f2fd; border-left: 5px solid #2196f3; padding: 15px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f5f5f5; font-weight: bold; }
+        .code-block { background: #f8f8f8; border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; overflow-x: auto; }
+        .metric-box { display: inline-block; background: #e8f5e8; border: 2px solid #4caf50; padding: 15px; margin: 10px; border-radius: 8px; text-align: center; min-width: 150px; }
+        .threat-box { display: inline-block; background: #ffebee; border: 2px solid #f44336; padding: 15px; margin: 10px; border-radius: 8px; text-align: center; min-width: 150px; }
+        .timeline { border-left: 3px solid #2196f3; padding-left: 20px; margin: 20px 0; }
+        .timeline-item { margin: 20px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+        .evidence-list { background: #fff3e0; padding: 20px; border-radius: 8px; margin: 15px 0; }
+        .recommendation { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #4caf50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 ALB Access Log 보안 분석 보고서</h1>
+        <p style="text-align: center; font-size: 18px; color: #666;">
+            <strong>분석 기간:</strong> 2024년 7월-8월 | 
+            <strong>총 요청:</strong> 3,659,312건 | 
+            <strong>위험도:</strong> <span style="color: #d32f2f; font-weight: bold;">🔴 CRITICAL</span>
+        </p>
+
+        <div class="alert-critical">
+            <h3>⚠️ 긴급 보안 경고</h3>
+            <p><strong>13.124.46.40</strong> IP에서 대규모 자동화 봇 공격이 탐지되었습니다. 즉시 차단 조치가 필요합니다.</p>
+        </div>
+
+        <h2>📊 공격 규모 개요</h2>
+        <div style="text-align: center;">
+            <div class="threat-box">
+                <h4>봇 공격 IP</h4>
+                <div style="font-size: 24px; color: #d32f2f;">13.124.46.40</div>
+                <div>1,815,063 요청</div>
+            </div>
+            <div class="metric-box">
+                <h4>정상 사용자 IP</h4>
+                <div style="font-size: 24px; color: #4caf50;">140.248.29.3</div>
+                <div>14,593 요청</div>
+            </div>
+            <div class="threat-box">
+                <h4>공격 비율</h4>
+                <div style="font-size: 24px; color: #d32f2f;">49.6%</div>
+                <div>전체 트래픽의 절반</div>
+            </div>
+        </div>
+
+        <h2>🔍 봇 공격 증거 분석</h2>
+        
+        <h3>1. 포트 사용 패턴 분석</h3>
+        <div class="evidence-list">
+            <h4>🚩 비정상적 포트 사용 패턴</h4>
+            <table>
+                <tr><th>구분</th><th>13.124.46.40 (봇)</th><th>140.248.29.3 (정상)</th><th>차이</th></tr>
+                <tr><td>사용 포트 수</td><td style="color: #d32f2f;"><strong>64,510개</strong></td><td>380개</td><td>170배</td></tr>
+                <tr><td>포트당 평균 요청</td><td style="color: #d32f2f;"><strong>28개 (규칙적)</strong></td><td>38개 (불규칙)</td><td>체계적 분산</td></tr>
+                <tr><td>포트 범위</td><td style="color: #d32f2f;"><strong>1024-65535 순차</strong></td><td>랜덤</td><td>자동화 증거</td></tr>
+            </table>
+            
+            <div class="alert-warning">
+                <strong>왜 이것이 봇 공격의 증거인가?</strong><br>
+                • <strong>정상 사용자</strong>: 브라우저나 앱에서 1-10개 포트만 사용<br>
+                • <strong>봇/스크립트</strong>: 연결 풀링으로 수만개 포트를 체계적으로 사용<br>
+                • <strong>64,510개 포트</strong>는 인간이 불가능한 수준의 동시 연결
+            </div>
+        </div>
+
+        <h3>2. API 공격 패턴 분석</h3>
+        <div class="evidence-list">
+            <h4>🎯 집중 공격 대상 API</h4>
+            <table>
+                <tr><th>API 엔드포인트</th><th>요청 수</th><th>비율</th><th>공격 목적</th></tr>
+                <tr><td>/api/auth/session</td><td style="color: #d32f2f;"><strong>487,085</strong></td><td>26.8%</td><td>세션 하이재킹</td></tr>
+                <tr><td>/api/balcony-api/user/adult/toggle</td><td style="color: #d32f2f;"><strong>312,194</strong></td><td>17.2%</td><td>성인 콘텐츠 우회</td></tr>
+                <tr><td>/api/balcony-api/user</td><td style="color: #d32f2f;"><strong>312,192</strong></td><td>17.2%</td><td>사용자 정보 수집</td></tr>
+            </table>
+            
+            <div class="alert-warning">
+                <strong>공격 의도 분석:</strong><br>
+                • <strong>세션 API 대량 호출</strong>: 유효한 세션 토큰 탈취 시도<br>
+                • <strong>성인 콘텐츠 토글</strong>: 연령 제한 우회 시도<br>
+                • <strong>사용자 정보 API</strong>: 개인정보 수집 및 계정 탈취 시도
+            </div>
+        </div>
+
+        <h3>3. 응답시간 패턴 분석</h3>
+        <div class="evidence-list">
+            <h4>⏱️ 자동화 도구 사용 증거</h4>
+            <table>
+                <tr><th>응답시간 패턴</th><th>발생 횟수</th><th>특징</th></tr>
+                <tr><td>1096ms / 174ms</td><td style="color: #d32f2f;"><strong>43,198회</strong></td><td>매우 규칙적</td></tr>
+                <tr><td>1095ms / 174ms</td><td style="color: #d32f2f;"><strong>42,261회</strong></td><td>1ms 차이로 반복</td></tr>
+                <tr><td>521ms / 535ms</td><td style="color: #d32f2f;"><strong>26,033회</strong></td><td>세션 API 전용</td></tr>
+            </table>
+            
+            <div class="alert-warning">
+                <strong>왜 이것이 자동화의 증거인가?</strong><br>
+                • <strong>정상 사용자</strong>: 네트워크 지연, 서버 부하로 응답시간이 불규칙<br>
+                • <strong>봇/스크립트</strong>: 동일한 환경에서 실행되어 응답시간이 매우 규칙적<br>
+                • <strong>1ms 단위 반복</strong>은 인간의 클릭 패턴으로는 불가능
+            </div>
+        </div>
+
+        <h2>🔬 기술적 분석: 공격 메커니즘</h2>
+        
+        <h3>1. AWS 인프라 악용 분석</h3>
+        <div class="alert-info">
+            <h4>🌍 지리적 정보 분석</h4>
+            <p><strong>13.124.46.40</strong>은 AWS ap-northeast-2 (서울) 리전의 IP 대역입니다.</p>
+            <div class="code-block">
+# IP 대역 확인
+$ whois 13.124.46.40
+NetRange: 13.124.0.0 - 13.124.255.255
+Organization: Amazon Technologies Inc. (AT-88-Z)
+Country: KR (South Korea)
+            </div>
+            
+            <div class="alert-warning">
+                <strong>왜 AWS IP가 위험한가?</strong><br>
+                • <strong>신뢰성 악용</strong>: AWS IP는 일반적으로 차단 대상이 아님<br>
+                • <strong>확장성</strong>: EC2 인스턴스를 통한 대규모 분산 공격 가능<br>
+                • <strong>익명성</strong>: 실제 공격자 추적이 어려움<br>
+                • <strong>비용 효율성</strong>: 저렴한 비용으로 대량 트래픽 생성 가능
+            </div>
+        </div>
+
+        <h3>2. 연결 풀링 공격 기법</h3>
+        <div class="evidence-list">
+            <h4>🔗 포트 스캔 vs 연결 풀링</h4>
+            <table>
+                <tr><th>구분</th><th>포트 스캔</th><th>연결 풀링 공격</th><th>13.124.46.40 패턴</th></tr>
+                <tr><td>목적</td><td>열린 포트 탐지</td><td>서비스 부하 유발</td><td style="color: #d32f2f;">✓ 연결 풀링</td></tr>
+                <tr><td>포트당 요청</td><td>1-2개</td><td>수십개</td><td style="color: #d32f2f;">✓ 평균 28개</td></tr>
+                <tr><td>지속성</td><td>짧음</td><td>장기간</td><td style="color: #d32f2f;">✓ 장기간</td></tr>
+                <tr><td>패턴</td><td>순차적</td><td>체계적 분산</td><td style="color: #d32f2f;">✓ 체계적</td></tr>
+            </table>
+            
+            <div class="code-block">
+# 공격자가 사용한 것으로 추정되는 기법
+import asyncio
+import aiohttp
+
+async def attack_session():
+    connector = aiohttp.TCPConnector(
+        limit=65000,  # 최대 연결 수
+        limit_per_host=65000
+    )
+    
+    # 64,510개 포트를 체계적으로 사용
+    for port in range(1024, 65535):
+        # 각 포트당 평균 28회 요청
+        for _ in range(28):
+            await make_request(f":{port}")
+            </div>
+        </div>
+
+        <h2>🛡️ 즉시 대응 방안</h2>
+        
+        <div class="recommendation">
+            <h3>1. 긴급 차단 조치 (즉시 실행)</h3>
+            <div class="code-block">
+# AWS WAF 규칙 추가
+aws wafv2 create-rule \
+  --name "Block-Malicious-IP" \
+  --rule '{
+    "Name": "BlockIP13124464640",
+    "Priority": 1,
+    "Statement": {
+      "IPSetReferenceStatement": {
+        "ARN": "arn:aws:wafv2:ap-northeast-2:account:ipset/malicious-ips"
+      }
+    },
+    "Action": {"Block": {}},
+    "VisibilityConfig": {
+      "SampledRequestsEnabled": true,
+      "CloudWatchMetricsEnabled": true,
+      "MetricName": "BlockMaliciousIP"
+    }
+  }'
+
+# Security Group 규칙 추가
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-xxxxxxxxx \
+  --protocol tcp \
+  --port 443 \
+  --source-group sg-xxxxxxxxx \
+  --rule-description "Block 13.124.46.40"
+            </div>
+        </div>
+
+        <div class="recommendation">
+            <h3>2. API Rate Limiting 설정</h3>
+            <div class="code-block">
+# API Gateway Rate Limiting
+{
+  "throttle": {
+    "rateLimit": 100,
+    "burstLimit": 200
+  },
+  "quota": {
+    "limit": 10000,
+    "period": "DAY"
+  },
+  "per_route_throttle": {
+    "/api/auth/session": {
+      "rateLimit": 10,
+      "burstLimit": 20
+    }
+  }
+}
+            </div>
+        </div>
+
+        <h2>📈 분석 시스템 구축 과정</h2>
+        
+        <h3>사용된 도구 및 스크립트</h3>
+        <div class="code-block">
+# 1. 데이터 파이프라인 구축
+setup_analytics_pipeline.py  # S3, Glue, Athena 설정
+athena_setup.py             # Athena 워크그룹 생성
+fix_table_schema.py         # 테이블 스키마 수정
+
+# 2. 분석 스크립트
+anomaly_analysis.py         # 이상 패턴 탐지
+security_analysis.py        # 보안 위협 분석
+ip_detailed_analysis.py     # IP별 상세 분석
+
+# 3. SQL 쿼리
+basic_stats.sql            # 기본 통계
+top_ips_updated.sql        # IP별 트래픽 분석
+request_analysis.sql       # 요청 패턴 분석
+response_time_analysis.sql # 응답시간 분석
+        </div>
+
+        <h2>📊 결론 및 권고사항</h2>
+        
+        <div class="alert-critical">
+            <h3>⚠️ 최종 결론</h3>
+            <p><strong>13.124.46.40</strong>은 명백한 자동화 봇 공격으로 확인되었습니다.</p>
+            <ul>
+                <li>64,510개 포트 사용 (정상 사용자의 170배)</li>
+                <li>1.8M+ 요청으로 전체 트래픽의 49.6% 차지</li>
+                <li>세션 하이재킹 및 개인정보 수집 시도</li>
+                <li>AWS 인프라를 악용한 고도화된 공격</li>
+            </ul>
+        </div>
+
+        <div class="recommendation">
+            <h3>🎯 향후 보안 강화 방안</h3>
+            <ol>
+                <li><strong>실시간 모니터링</strong>: CloudWatch + Lambda 기반 자동 탐지</li>
+                <li><strong>ML 기반 이상 탐지</strong>: SageMaker를 활용한 패턴 학습</li>
+                <li><strong>API 보안 강화</strong>: JWT 토큰, CAPTCHA 도입</li>
+                <li><strong>지리적 차단</strong>: 특정 지역 IP 대역 제한</li>
+                <li><strong>정기 보안 감사</strong>: 월 1회 로그 분석 및 위협 평가</li>
+            </ol>
+        </div>
+
+        <hr style="margin: 40px 0;">
+        <p style="text-align: center; color: #666; font-size: 14px;">
+            <strong>보고서 작성일:</strong> 2025-08-21 | 
+            <strong>분석 도구:</strong> AWS Glue, Athena, Python | 
+            <strong>위험도:</strong> 🔴 CRITICAL
+        </p>
+    </div>
+</body>
+</html>
